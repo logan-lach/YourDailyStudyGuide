@@ -1,10 +1,13 @@
 import random
 import smtplib
 from pdfminer import high_level as reader
-import datetime as day
+from datetime import date as day
 import os
+import requests
+from bs4 import BeautifulSoup
+import lxml
 
-EMAIL_ADDRESS = os.environ.get('EMAIL_USER')
+EMAIL_ADDRESS = os.environ.get('EMAIL_ADDRESS')
 EMAIL_PASSWORD = os.environ.get('EMAIL_PASSWORD')
 
 PATH = "/Users/loganlach/Developer/chromedriver"
@@ -68,47 +71,51 @@ def csQuestions():
 
 # Run it from the top, test 2 has a ton of questions and answers included so some unique work has
 # To be done on them
+
+def pythonQuestions():
+    PATH = '/Users/loganlach/dailyStudyGuideProject/Python Questions/PythonTest1.txt'
+    text = open(PATH, mode='r', encoding='utf-8')
+
+    ranNum = random.randint(1, 45)
+
+    other = text.readlines()
+    print(other)
+    while (other.__contains__('\n')):
+        other.remove('\n')
+
+    i = 0
+    while(i < other.__len__()):
+        string = other[i]
+        if string[0].isdigit():
+            i = i + 1
+            continue
+        else:
+            other.remove(string)
+            i = i-1
+
+    return other[ranNum-1]
+
+
 def javaQuestions():
     PATH = '/Users/loganlach/dailyStudyGuideProject/JavaQuestions'
     todaysTest = random.randint(1, 2)
-    options = {1: '/test1.pdf', 2: '/test2.pdf'}
+    options = {1: '/test1.txt', 2: '/test2.txt'}
     PATH += options.get(todaysTest)
-    text = reader.extract_text(open(PATH, mode='rb'))
+    text = open(PATH, mode='r').readlines()
 
-    if todaysTest == 1:
-        constant = 1
-        currentIndex = 0
-        list = []
-        while currentIndex != -1:
-            for i in range(currentIndex, len(text)):
-                currentIndex = text.find(str(constant) + '.')
-                list.append(currentIndex)
-                constant += 1
-                break
-        randomQuestion = random.randint(0, len(list) - 1)
-        packet = text[int(list[randomQuestion]):int(list[randomQuestion + 1])]
-        return packet
+    str = ''
+    for t in text:
+        str += t
 
-    if todaysTest == 2:
-        constant = 1
-        currentIndex = 0
-        list = []
-        while currentIndex != -1:
-            for i in range(currentIndex, len(text)):
-                currentIndex = text.find('Q' + str(constant))
-                list.append(currentIndex)
-                constant += 1
-                break
-
-        questionPick = random.randint(0, len(list) - 1)
-        questionAndAnswer = text[int(list[questionPick]): int(list[questionPick + 1])]
-        answerLocation = questionAndAnswer.find('Ans:') + int(list[questionPick])
-        return text[int(list[questionPick]):answerLocation]
+    print(str)
 
 
 
-#Done for now, will come back when machine is working
-#to fix everything else.
+
+
+
+# Done for now, will come back when machine is working
+# to fix everything else.
 def emailWork():
     with smtplib.SMTP('smtp.gmail.com', 587) as smtp:
         smtp.ehlo()
@@ -117,19 +124,25 @@ def emailWork():
 
         smtp.login(EMAIL_ADDRESS, EMAIL_PASSWORD)
 
-        subject = 'Your coding review guide' + str(day.datetime)
-        body = 'This is a test, just to make sure the email stuff works'
+        subject = 'Your coding review guide' + " " + day.strftime(day.today(), '%m/%d')
+        body = 'Hello! \n\n\n This is your daily coding guide \n\n\n Your Java Question \n\n\n' + javaQuestions() + '\n\n\n\n\n Your CMSC132 Question\n\n' + csQuestions()
 
         msg = f'Subject: {subject}\n\n{body} '
 
-        smtp.sendmail(EMAIL_ADDRESS, 'lwlach123@gmail.com', msg)
+        try:
+            smtp.sendmail(EMAIL_ADDRESS, 'lwlach123@gmail.com', msg)
+        except:
+            subject = 'Your coding review guide' + " " + day.strftime(day.today(), '%m/%d')
+            body = 'Hello! \n\n\n This is your daily coding guide \n\n\n Your Java Question \n\n\n' + javaQuestions() + '\n\n\n\n\n Your CMSC132 Question\n\n' + csQuestions().replace(
+                '"', '\'') + '\n\n\n' + 'Your Python Question' + '\n\n\n' + pythonQuestions()
+
+            msg = f'Subject: {subject}\n\n{body} '
+
+            smtp.sendmail(EMAIL_ADDRESS, 'lwlach123@gmail.com', msg)
 
 
-emailWork()
 
-
-
-
+javaQuestions()
 
 
 
